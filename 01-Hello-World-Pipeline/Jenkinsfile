@@ -1,6 +1,10 @@
 pipeline{
     agent any
 
+    tools {
+    nodejs 'node23.10.0'
+    }
+
     stages{
         stage('Hello-World'){
             steps{
