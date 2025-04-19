@@ -1,0 +1,51 @@
+pipeline{
+    agent any
+
+    parameters{
+        string(name: 'APP_NAME', defaultValue: 'Davita', description: "Please enter the name of your app")
+        choice(name: 'ENVIRONMENT', choices: ["dev", "staging", "prod"], description: "Please select the env you would like to deploy to")
+        boolean(name: 'RUN_TESTS', defaultValue: false, description: "Please select if you want to run tests")
+    }
+
+    environment{
+        DEPLOYER: 'Hello Abhishek Alimchandani, hope this works'
+    }
+
+    stages{
+        stage('Intro'){
+            steps{
+                echo "${env.DEPLOYER} on the ${params.ENVIRONMENT} environment"
+            }
+        }
+        
+        stage('Run Tests'){
+            steps{
+                script{
+                    if(params.RUN_TESTS == true){
+                        echo "All the tests ran successfully"
+                    }else {
+                        echo "All tests cases were skipped  "
+                    }
+                }
+            }
+        }
+
+        stage('Deploy'){
+            steps{
+                script{
+                    if(params.ENVIRONMENT == 'dev'){
+                        echo "Deploying it to the dev env"
+                    }
+
+                    if(params.ENVIRONMENT == 'prod'){
+                        echo "Deploying it to the prod env"
+                    }
+
+                    if(params.ENVIRONMENT == 'staging'){
+                        echo "Deploying it to the staging env"
+                    }
+                }
+            }
+        }
+    }
+}
