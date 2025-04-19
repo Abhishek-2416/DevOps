@@ -22,17 +22,17 @@ pipeline {
         }
 
         //This is how we can see who clicked the approve also
-        stage('Re confirmation') {
-            steps{
-                script{
-                    def approver = input(
-                    message: "Are you sure you want to continue",
-                    ok: "Yess"
-                    )
-                    echo "Approved by ${approver}"
-                }
-            }
-        }
+        // stage('Re confirmation') {
+        //     steps{
+        //         script{
+        //             def approver = input(
+        //             message: "Are you sure you want to continue",
+        //             ok: "Yess"
+        //             )
+        //             echo "Approved by ${approver}"
+        //         }
+        //     }
+        // }
 
         stage('Deploy to Production'){
             steps{
