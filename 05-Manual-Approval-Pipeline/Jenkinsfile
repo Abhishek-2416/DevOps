@@ -25,7 +25,7 @@ pipeline {
         stage('Re confirmation') {
             steps{
                 def approver = input(
-                    message: "Are you sure you want to continue"
+                    message: "Are you sure you want to continue",
                     ok: "Yess"
                 )
                 echo "Approved by ${approver}"
