@@ -8,7 +8,7 @@ pipeline{
     }
 
     environment{
-        DEPLOYER: 'Hello Abhishek Alimchandani, hope this works'
+        DEPLOYER: "Hello Abhishek Alimchandani, hope this works"
     }
 
     stages{
