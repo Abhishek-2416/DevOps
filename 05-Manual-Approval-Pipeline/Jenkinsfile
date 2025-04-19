@@ -1,0 +1,44 @@
+pipeline {
+    agent any
+
+    stages{
+        stage('Build App'){
+            steps{
+                echo "Building the application..."
+            }
+        }
+
+        stage('Run Tests'){
+            steps{
+                echo "Running unit and integration tests..."
+            }
+        }
+
+        //So here if we abort it will not go to the next step only
+        stage('Approval Gate'){
+            steps{
+                input message: "QA Team, do you approve this deployment to production", ok: "Yes, proceed"
+            }
+        }
+
+        stage('Deploy to Production'){
+            steps{
+                echo "Deploying application to production..."
+            }
+        }
+    }
+
+    post {
+        always{
+            echo "Cleaning the workspace..."
+        }
+
+        success {
+            echo "Pipeline succeeded 🎉"
+        }
+
+        failure {
+            echo "Pipeline failed ❌"
+        }
+    }
+}

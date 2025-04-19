@@ -34,3 +34,12 @@ pipeline{
         }
     }
 }
+
+//Other type of common post conditons
+/*
+always – runs no matter what (success or failure)
+success – only runs if the pipeline (or stage) succeeded
+failure – only runs if it failed
+unstable – runs if marked unstable (e.g., test failures)
+changed – runs only if the current pipeline result is different from the previous one
+*/
