@@ -2,13 +2,19 @@ pipeline{
     agent any
 
     parameters{
-        string(name: 'USERNAME'     ,defaultValue: "Abhishek Alimchandani",description: "Enter name of the person we are greeting")
+        string(name: 'USERNAME',defaultValue: "Abhishek Alimchandani",description: "Enter name of the person we are greeting")
+        string(name: 'CITY_NAME', defaultValue: "Hyderabad", description: "Please enter the name of your city")
+        choice(name: 'GREETING_TYPE', choices: ["Formal","Casual"], description: "Please select the type of greeting you would like")
     }
 
     stages{
         stage('Greeting'){
             steps{
-                echo "Hello ${params.USERNAME}, hope you are doing good !!"
+                if(params.GREETING_TYPE == 'Formal'){
+                    echo "Good day, ${params.USERNAME} from ${params.CITY_NAME}. I hope this message finds you well."
+                } else {
+                    echo "Hey ${params.USERNAME} 👋 from ${params.CITY}, hope you’re chillin’!"
+                }
             }
         }
     }
