@@ -9,7 +9,6 @@ pipeline{
         stage('Hello-World'){
             steps{
                 echo "👋 Hello from Jenkins Pipeline!"
-                sh 'node hello.js'
             }
         }
     }
