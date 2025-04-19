@@ -4,7 +4,7 @@ pipeline{
     parameters{
         string(name: 'APP_NAME', defaultValue: 'Davita', description: "Please enter the name of your app")
         choice(name: 'ENVIRONMENT', choices: ["dev", "staging", "prod"], description: "Please select the env you would like to deploy to")
-        boolean(name: 'RUN_TESTS', defaultValue: false, description: "Please select if you want to run tests")
+        booleanParam(name: 'RUN_TESTS', defaultValue: false, description: "Please select if you want to run tests")
     }
 
     environment{
