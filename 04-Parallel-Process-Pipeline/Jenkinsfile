@@ -1,0 +1,26 @@
+pipeline{
+    agent any
+
+    stages{
+        stage ('Run All Tests'){
+            parallel{
+                stage('Unit Tests'){
+                    steps{
+                        echo "Running all the unit tests"
+                    }
+                }
+                stage('API Tests'){
+                    steps{
+                        echo "Running all API tests"
+                        sleep(3)
+                    }
+                }
+                stage('UI Tests'){
+                    steps{
+                        echo "Running all UI Tests"
+                    }
+                }
+            }
+        }
+    }
+}
