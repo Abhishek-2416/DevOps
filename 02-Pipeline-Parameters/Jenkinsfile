@@ -13,7 +13,7 @@ pipeline{
                 if(params.GREETING_TYPE == 'Formal'){
                     echo "Good day, ${params.USERNAME} from ${params.CITY_NAME}. I hope this message finds you well."
                 } else {
-                    echo "Hey ${params.USERNAME} 👋 from ${params.CITY}, hope you’re chillin’!"
+                    echo "Hey ${params.USERNAME} 👋 from ${params.CITY_NAME}, hope you’re chillin’!"
                 }
             }
         }
