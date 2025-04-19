@@ -7,8 +7,8 @@ pipeline{
         booleanParam(name: 'RUN_TESTS', defaultValue: false, description: "Please select if you want to run tests")
     }
 
-    environment{
-        DEPLOYER: "Hello Abhishek Alimchandani, hope this works"
+    environment {
+        DEPLOYER =  "Hello Abhishek Alimchandani, hope this works"
     }
 
     stages{
