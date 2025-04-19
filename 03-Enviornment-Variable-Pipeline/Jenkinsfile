@@ -33,16 +33,12 @@ pipeline{
         stage('Deploy'){
             steps{
                 script{
-                    if(params.ENVIRONMENT == 'dev'){
+                    if (params.ENVIRONMENT == 'dev') {
                         echo "Deploying it to the dev env"
-                    }
-
-                    if(params.ENVIRONMENT == 'prod'){
-                        echo "Deploying it to the prod env"
-                    }
-
-                    if(params.ENVIRONMENT == 'staging'){
+                    } else if (params.ENVIRONMENT == 'staging') {
                         echo "Deploying it to the staging env"
+                    } else {
+                        echo "Deploying it to the prod env"
                     }
                 }
             }
