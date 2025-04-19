@@ -17,16 +17,26 @@ pipeline{
                 echo "${env.DEPLOYER} on the ${params.ENVIRONMENT} environment"
             }
         }
-        
+        // Here instead of this we can use the when{} block in which the key difference it helps us skip this step entirelly when it is not needed
+        // stage('Run Tests'){
+        //     steps{
+        //         script{
+        //             if(params.RUN_TESTS == true){
+        //                 echo "All the tests ran successfully"
+        //             }else {
+        //                 echo "All tests cases were skipped  "
+        //             }
+        //         }
+        //     }
+        // }
+
         stage('Run Tests'){
+            when{
+                expression {return params.RUN_TESTS}
+            }
+
             steps{
-                script{
-                    if(params.RUN_TESTS == true){
-                        echo "All the tests ran successfully"
-                    }else {
-                        echo "All tests cases were skipped  "
-                    }
-                }
+                echo "Running tests before deploying it"
             }
         }
 
