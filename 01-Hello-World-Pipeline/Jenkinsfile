@@ -7,5 +7,12 @@ pipeline{
                 echo "👋 Hello from Jenkins Pipeline!"
             }
         }
+
+        stage('Info'){
+            steps{
+                sh 'whoami'
+                sh 'pwd'
+            }
+        }
     }
 }
