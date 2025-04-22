@@ -43,7 +43,7 @@ pipeline {
 
     post {
         always{
-            echo "🧹 Cleaning the workspace..."
+            echo "🧹 Cleaning the workspace.."
         }
 
         success {
