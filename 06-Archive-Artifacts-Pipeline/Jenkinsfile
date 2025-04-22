@@ -1,32 +1,44 @@
-pipeline{
+pipeline {
     agent any
 
     tools {
         nodejs 'Node23'
     }
 
-    stages{
-        stage('Install All Packages'){
-            steps{
-                sh 'npm install'
+    environment {
+        APP_DIR = '06-Archive-Artifacts-Pipeline'
+    }
+
+    stages {
+        stage('Install All Packages') {
+            steps {
+                dir("${APP_DIR}") {
+                    sh 'npm install'
+                }
             }
         }
 
-        stage('Build'){
-            steps{
-                sh 'npm run build'
+        stage('Build') {
+            steps {
+                dir("${APP_DIR}") {
+                    sh 'npm run build'
+                }
             }
         }
 
-        stage('Test'){
-            steps{
-                sh 'npm run test'
+        stage('Test') {
+            steps {
+                dir("${APP_DIR}") {
+                    sh 'npm run test'
+                }
             }
         }
 
-        stage('Archive Artifacts'){
-            steps{
-                archiveArtifacts artifacts: 'dist/**', fingerprint: true
+        stage('Archive Artifacts') {
+            steps {
+                dir("${APP_DIR}") {
+                    archiveArtifacts artifacts: 'dist/**', fingerprint: true
+                }
             }
         }
     }
