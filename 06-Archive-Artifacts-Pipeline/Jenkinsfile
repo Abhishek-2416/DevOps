@@ -1,6 +1,10 @@
 pipeline{
     agent any
 
+    tools {
+        nodejs 'Node23'
+    }
+
     stages{
         stage('Install All Packages'){
             steps{
@@ -29,10 +33,10 @@ pipeline{
 
     post {
         success {
-            echo 'Pipeline completed successfully!'
+            echo 'Pipeline completed successfully! ✅'
         }
         failure {
-            echo 'Pipeline failed. Check the logs.'
+            echo 'Pipeline failed. Check the logs. ❌'
         }
     }
 }
