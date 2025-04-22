@@ -28,7 +28,7 @@ pipeline {
         //             def approver = input(
         //             message: "Are you sure you want to continue",
         //             ok: "Yess"
-        //             )
+        //              )
         //             echo "Approved by ${approver}"
         //         }
         //     }
@@ -43,7 +43,7 @@ pipeline {
 
     post {
         always{
-            echo "Cleaning the workspace..."
+            echo "🧹 Cleaning the workspace..."
         }
 
         success {
