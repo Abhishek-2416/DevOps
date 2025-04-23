@@ -18,7 +18,7 @@ pipeline{
     stages{
         stage('Install'){
             steps{
-                dir(${APP_DIR}){
+                dir("${APP_DIR}"){
                     sh 'npm install'
                 }
             }
@@ -30,7 +30,7 @@ pipeline{
             }
 
             steps{
-                dir(${APP_DIR}) {
+                dir("${APP_DIR}") {
                     sh 'npm run test'
                 }
             }
@@ -38,7 +38,7 @@ pipeline{
 
         stage('Build App'){
             steps{
-                dir(${APP_DIR}) {
+                dir("${APP_DIR}") {
                     sh 'npm run build'
                 }
             }
@@ -46,7 +46,7 @@ pipeline{
 
         stage('Archive Artifacts'){
             steps{
-                dir(${APP_DIR}){
+                dir("${APP_DIR}"){
                     archiveArtifacts artifacts: 'build/**', fingerprint:true
                 }
             }
