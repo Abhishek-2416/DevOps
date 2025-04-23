@@ -7,5 +7,35 @@ pipeline {
                 echo "Hello I am Abhishek Alimchandani !!"
             }
         }
+
+        stage('Build'){
+            steps{
+                sh 'npm run build'
+            }
+        }
+
+        stage('Test'){
+            when {
+                any of{
+                    branch 'dev'
+                    branch 'main'
+                }
+            }
+
+            steps{
+                sh 'npm run test'
+            }
+        }
+
+        stage('Deploy'){
+            when{
+                expression {env.BRANCH_NAME == 'main'}
+            }
+
+            steps{
+                echo "Deploying on main branch"
+                input message: "Are you sure you want to deploy on the main branch", ok: "Yes, go ahead!"
+            }
+        }
     }
 }

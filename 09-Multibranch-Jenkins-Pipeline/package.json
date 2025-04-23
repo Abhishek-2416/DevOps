@@ -1,0 +1,16 @@
+{
+  "name": "09-multibranch-jenkins-pipeline",
+  "version": "1.0.0",
+  "description": "Multibranch Pipeline HandsOn",
+  "main": "index.js",
+  "scripts": {
+  "start": "node index.js",
+  "test": "echo \"No tests yet\" && exit 0",
+  "build": "mkdir -p dist && cp index.js dist/"
+},
+  "author": "Abhishek Alimchandani",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
