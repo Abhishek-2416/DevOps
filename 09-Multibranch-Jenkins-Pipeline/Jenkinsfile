@@ -33,7 +33,7 @@ pipeline {
             }
 
             steps{
-                echo "Deploying on main branch"
+                echo "Deploying on main branch."
                 input message: "Are you sure you want to deploy on the main branch", ok: "Yes, go ahead!"
             }
         }
