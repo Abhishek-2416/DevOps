@@ -38,4 +38,13 @@ pipeline {
             }
         }
     }
+
+    post {
+    success {
+        echo "✅ Build for ${env.BRANCH_NAME} succeeded"
+    }
+    failure {
+        echo "❌ Build failed on ${env.BRANCH_NAME}"
+    }
+}
 }
