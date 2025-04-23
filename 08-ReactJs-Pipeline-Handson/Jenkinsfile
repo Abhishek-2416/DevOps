@@ -1,0 +1,84 @@
+pipeline{
+    agent any
+
+    tools{
+        nodejs 'Node23'
+    }
+
+    parameters{
+        string(name: "APP_NAME", defaultValue: "My App",description: "Please enter your app's name")
+        choices(name:"DEPLOY_ENV", choice: ["dev", "staging", "prod"], description: "Choose the env you want to deploy to")
+        booleanParam(name: "RUN_TESTS", defaultValue: true, description: "Select if you want to run tests")
+    }
+
+    environment {
+        APP_DIR = '08-ReactJs-Pipeline-Handson'
+    }
+
+    stages{
+        stage('Install'){
+            steps{
+                dir(${APP_DIR}){
+                    sh 'npm install'
+                }
+            }
+        }
+
+        stage('Tests'){
+            when{
+                expression { return params.RUN_TESTS}
+            }
+
+            steps{
+                dir(${APP_DIR}) {
+                    sh 'npm run test'
+                }
+            }
+        }
+
+        stage('Build App'){
+            steps{
+                dir(${APP_DIR}) {
+                    sh 'npm run build'
+                }
+            }
+        }
+
+        stage('Archive Artifacts'){
+            steps{
+                dir(${APP_DIR}){
+                    archiveArtifacts artifacts: 'build/**', fingerprint:true
+                }
+            }
+        }
+
+        stage('Manual Approval'){
+            steps{
+                script{
+                    if(params.DEPLOY_ENV == 'prod'){
+                        inputmessage: "Do you want to deploy to production", ok: "Yes, deploy!"
+                    }
+                }
+            }
+        }
+
+        stage("Deploying App"){
+            steps{
+                echo "Deploying app to ${params.APP_NAME}"
+            }
+        }
+    }
+
+    post{
+        success{
+            mail to:'abhishekalimchandani1624@gmail.com,pranavlakkadi@gmail.com',
+            subject: "✅ Jenkins Build successfull - ${env.JOB_NAME}  #${env.BUILD_NUMBER}",
+            body: "Good news! The build completed successfully .\n\n Check Jenkins: ${env.BUILD_URL}"
+        }
+        failure{
+            mail to:'abhishekalimchandani1624@gmail.com,pranavlakkadi@gmail.com',
+            subject: "❌ Jenkins Build Failed - ${env.JOB_NAME}  #${env.BUILD_NUMBER}",
+            body: "Something went wrong. Please check the logs.\n\nJob: ${env.JOB_NAME}\nBuild: ${env.BUILD_URL}"
+        }    
+    }
+}
