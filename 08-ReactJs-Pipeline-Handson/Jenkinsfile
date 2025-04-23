@@ -56,7 +56,7 @@ pipeline{
             steps{
                 script{
                     if(params.DEPLOY_ENV == 'prod'){
-                        inputmessage: "Do you want to deploy to production", ok: "Yes, deploy!"
+                        input message: "Do you want to deploy to production", ok: "Yes, deploy!"
                     }
                 }
             }
