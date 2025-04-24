@@ -16,7 +16,7 @@ pipeline {
 
         stage('Test'){
             when {
-                any of{
+                anyOf{
                     branch 'dev'
                     branch 'main'
                 }
