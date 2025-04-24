@@ -3,6 +3,10 @@
 pipeline {
     agent any 
 
+    tools {
+        nodejs 'Node23'
+    }
+
     stages {
         stage('Greet') {
             steps {
