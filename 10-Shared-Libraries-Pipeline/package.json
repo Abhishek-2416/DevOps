@@ -1,0 +1,16 @@
+{
+  "name": "10-shared-libraries-pipeline",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+  "start": "node index.js",
+  "test": "echo \"No tests yet\" && exit 0",
+  "build": "mkdir -p dist && cp index.js dist/"
+},
+  "author": "Abhishek Alimchandani",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
