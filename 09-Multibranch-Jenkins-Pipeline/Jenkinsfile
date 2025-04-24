@@ -46,8 +46,18 @@ pipeline {
             }
 
             steps{
-                echo "Deploying on main branch"
-                input message: "Are you sure you want to deploy on the main branch", ok: "Yes, go ahead!"
+                dir("${APP_DIR}"){
+                    echo "Deploying on main branch"
+                    input message: "Are you sure you want to deploy on the main branch", ok: "Yes, go ahead!"
+                }
+            }
+        }
+
+        stage('Archive Artifacts'){
+            dir("${env.APP_DIR}"){
+                steps{
+                    archiveArtifacts artifacts: "dist/**", fingerprint: true
+                }
             }
         }
     }
