@@ -51,9 +51,9 @@ pipeline {
             }
         }
 
-        stage('Archive Artifacts'){
-            dir("${env.APP_DIR}"){
-                steps{
+        stage('Archive Artifacts') {
+            steps {
+                dir("${env.APP_DIR}") {
                     archiveArtifacts artifacts: "dist/**", fingerprint: true
                 }
             }
