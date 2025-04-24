@@ -10,6 +10,8 @@ pipeline {
 
         stage('Build'){
             steps{
+                sh 'which npm || echo "⚠️ npm is not available"'
+                sh 'npm install'
                 sh 'npm run build'
             }
         }
