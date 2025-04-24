@@ -5,6 +5,10 @@ pipeline {
         nodejs 'Node23'
     }
 
+    environment{
+        APP_DIR = '09-Multibranch-Jenkins-Pipeline'
+    }
+
     stages{
         stage('Greeting'){
             steps{
@@ -14,8 +18,10 @@ pipeline {
 
         stage('Build'){
             steps{
-                sh 'npm install'
-                sh 'npm run build'
+                dir("${env.APP_DIR}"){
+                    sh 'npm install'
+                    sh 'npm run build'
+                }
             }
         }
 
@@ -28,7 +34,9 @@ pipeline {
             }
 
             steps{
-                sh 'npm run test'
+                dir("${APP_DIR}"){
+                    sh 'npm run test'
+                }
             }
         }
 
