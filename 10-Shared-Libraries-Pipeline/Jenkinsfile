@@ -19,5 +19,11 @@ pipeline {
                 npmInstallAndBuild()
             }
         }
+
+        stage('Run Tests'){
+            steps{
+                npmRunTest()
+            }
+        }
     }
 }
