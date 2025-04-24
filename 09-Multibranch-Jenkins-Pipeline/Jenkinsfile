@@ -1,52 +1,50 @@
 pipeline {
     agent any
 
-    tools{
+    tools {
         nodejs 'Node23'
     }
 
-    environment{
+    environment {
         APP_DIR = '09-Multibranch-Jenkins-Pipeline'
     }
 
-    stages{
-        stage('Greeting'){
-            steps{
+    stages {
+        stage('Greeting') {
+            steps {
                 echo "Hello I am Abhishek Alimchandani !! "
             }
         }
 
-        stage('Build'){
-            steps{
-                dir("${env.APP_DIR}"){
+        stage('Build') {
+            steps {
+                dir("${env.APP_DIR}") {
                     sh 'npm install'
                     sh 'npm run build'
                 }
             }
         }
 
-        stage('Test'){
+        stage('Test') {
             when {
-                anyOf{
+                anyOf {
                     branch 'dev'
                     branch 'main'
                 }
             }
-
-            steps{
-                dir("${APP_DIR}"){
+            steps {
+                dir("${env.APP_DIR}") {
                     sh 'npm run test'
                 }
             }
         }
 
-        stage('Deploy'){
-            when{
-                expression {env.BRANCH_NAME == 'main'}
+        stage('Deploy') {
+            when {
+                expression { env.BRANCH_NAME == 'main' }
             }
-
-            steps{
-                dir("${APP_DIR}"){
+            steps {
+                dir("${env.APP_DIR}") {
                     echo "Deploying on main branch"
                     input message: "Are you sure you want to deploy on the main branch", ok: "Yes, go ahead!"
                 }
@@ -63,11 +61,11 @@ pipeline {
     }
 
     post {
-    success {
-        echo "✅ Build for ${env.BRANCH_NAME} succeeded"
+        success {
+            echo "✅ Build for ${env.BRANCH_NAME} succeeded"
+        }
+        failure {
+            echo "❌ Build failed on ${env.BRANCH_NAME}"
+        }
     }
-    failure {
-        echo "❌ Build failed on ${env.BRANCH_NAME}"
-    }
-}
 }
