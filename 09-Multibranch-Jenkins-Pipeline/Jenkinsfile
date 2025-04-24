@@ -10,6 +10,7 @@ pipeline {
 
         stage('Build'){
             steps{
+                echo "We are building the application"
                 sh 'npm run build'
             }
         }
