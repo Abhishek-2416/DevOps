@@ -3,6 +3,10 @@
 pipeline{
     agent any 
 
+    tools{
+        nodejs 'Node23'
+    }
+
     parameters{
         string(name: "USERNAME",defaultValue: "Abhishek Alimchandani", description: "Please enter your name here");
         choice(name: "DEPLOY_ENV", choices: ['dev','main','test'], description: "Please select the env you would like to deploy to")
