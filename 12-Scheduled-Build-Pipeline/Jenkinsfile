@@ -9,7 +9,7 @@ pipeline{
 
     parameters{
         string(name: "USERNAME",defaultValue: "Abhishek Alimchandani", description: "Please enter your name here");
-        choice(name: "DEPLOY_ENV", choices: ['dev','main','test'], description: "Please select the env you would like to deploy to")
+        choice(name: "DEPLOY_ENV", choices: ['dev','prod','test'], description: "Please select the env you would like to deploy to")
     }
 
     environment{
@@ -29,6 +29,20 @@ pipeline{
             }
         }
 
-        //stage('Archive Artifacts')
+        stage('Archive Artifacts'){
+            steps{
+                buildArtifacts(this)
+            }
+        }
+    }
+
+    triggers{
+        cron('H/1 * * * *') // Every minute
+        /* 
+        ➡️ Example: H 0 * * *
+        H → Any minute, randomized per job
+        0 → At 0th hour (midnight)
+        * * * → Any day, any month, any day-of-week
+        */
     }
 }

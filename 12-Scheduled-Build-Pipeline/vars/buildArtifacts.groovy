@@ -1,5 +1,5 @@
 def call(script) {
-    dir(APP_DIR){
+    dir(script.env.APP_DIR){
         archiveArtifacts artifacts: "dist/**" , fingerprint: true
     }
 }
