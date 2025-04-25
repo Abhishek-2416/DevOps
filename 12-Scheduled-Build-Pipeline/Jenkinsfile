@@ -1,15 +1,48 @@
+@Library('schedule-lib@main') _ 
+
 pipeline{
     agent any 
 
+    tools{
+        nodejs 'Node23'
+    }
+
+    parameters{
+        string(name: "USERNAME",defaultValue: "Abhishek Alimchandani", description: "Please enter your name here");
+        choice(name: "DEPLOY_ENV", choices: ['dev','prod','test'], description: "Please select the env you would like to deploy to")
+    }
+
+    environment{
+        APP_DIR = "12-Scheduled-Build-Pipeline"
+    }
+
     stages{
-        stage('Hello'){
+        stage('Greet Info'){
             steps{
-                echo "Testing basic Schdeule triggers"
+                greetUser(this)
+            }
+        }
+
+        stage('Install Build'){
+            steps{
+                npmInstallAndBuild(this)
+            }
+        }
+
+        stage('Archive Artifacts'){
+            steps{
+                buildArtifacts(this)
             }
         }
     }
 
     triggers{
-        cron('H/2 * * * *')
+        cron('H/3 * * * *') // Every minute
+        /* 
+        ➡️ Example: H 0 * * *
+        H → Any minute, randomized per job
+        0 → At 0th hour (midnight)
+        * * * → Any day, any month, any day-of-week
+        */
     }
 }
