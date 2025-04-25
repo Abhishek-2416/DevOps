@@ -1,0 +1,16 @@
+pipeline{
+    agent any 
+
+    parameters{
+        string(name: "USERNAME", defaultValue: "Abhishek Alimchandani", description: "Hey please enter your name here")
+        choice(name: "DEPLOY_ENV", choices: ['dev', 'staging', 'prod'], description: 'Select deployment target')
+    }
+
+    stages{
+        stage("Info"){
+            steps{
+                echo "Hey ${params.USERNAME} you are going to deploy to ${params.DEPLOY_ENV}"
+            }
+        }
+    }
+}
