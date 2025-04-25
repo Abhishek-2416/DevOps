@@ -37,7 +37,7 @@ pipeline{
     }
 
     triggers{
-        cron('H/3 * * * *') // Every minute
+        cron('H 2 1 * *') // Every minute
         /* 
         ➡️ Example: H 0 * * *
         H → Any minute, randomized per job
