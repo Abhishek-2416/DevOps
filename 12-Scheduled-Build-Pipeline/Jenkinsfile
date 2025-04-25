@@ -8,11 +8,23 @@ pipeline{
         choice(name: "DEPLOY_ENV", choices: ['dev','main','test'], description: "Please select the env you would like to deploy to")
     }
 
+    environment{
+        APP_DIR = "12-Scheduled-Build-Pipeline"
+    }
+
     stages{
         stage('Greet Info'){
             steps{
                 greetUser(this)
             }
         }
+
+        stage('Install Build'){
+            steps{
+                npmInstallAndBuild(this)
+            }
+        }
+
+        //stage('Archive Artifacts')
     }
 }
