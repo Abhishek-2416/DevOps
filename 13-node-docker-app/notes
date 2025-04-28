@@ -1,0 +1,30 @@
+"docker ps -a " to see all the containers
+"docker images" to see all the images
+"docker build -t name" to build the docker container
+"docker run -d{detached mode} -p 4000:3000{ map your Mac’s port 4000 ➔ container’s internal port 3000} name" so this is to run the docker image we created
+"docker pull name", so using this we can get the image from the internet which is pre built
+"docker stop name" to stop running the container
+"docker rm name" to remove the cotainer cleanly
+
+
+
+Container Management
+"docker logs name" When we run container , we directly cannot see the log , like server is runnning on port 3000 so by doing this we can see all the logs and we dont have to manually run the application manually
+"docker restart Cname" This is to restart when the container is crashed or any other issue
+"docker rename Cname newname" We can rename the random name by default to something more understandable
+"docker inspect Cname" Here it give us multiple things about the docker file, but these are few things that we need to focus on
+State | Is the container running or dead?
+PortBindings | Which ports are mapped from container to your machine?
+NetworkSettings | Container's internal IP, network type
+Env | Environment variables (Node version, config stuff)
+Cmd + Entrypoint | What exactly runs when container starts
+
+
+🎯 Quick Fun Real-World Example:
+
+If your app is unreachable ➔ check PortBindings.
+If your app is crashing ➔ check State + Logs.
+If your containers need to talk ➔ check IP addresses from NetworkSettings.
+If wrong Node.js version is running ➔ check Env for NODE_VERSION.
+✅ This is real-world daily stuff for Docker developers and DevOps.
+

@@ -1,0 +1,14 @@
+{
+  "name": "13-node-docker-app",
+  "version": "1.0.0",
+  "description": "Creating a basic node app and then using docker to create its image and containerize it",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Abhishek Alimchandani",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
