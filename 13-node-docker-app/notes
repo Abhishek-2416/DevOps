@@ -19,7 +19,6 @@ NetworkSettings | Container's internal IP, network type
 Env | Environment variables (Node version, config stuff)
 Cmd + Entrypoint | What exactly runs when container starts
 
-
 🎯 Quick Fun Real-World Example:
 
 If your app is unreachable ➔ check PortBindings.
@@ -28,3 +27,9 @@ If your containers need to talk ➔ check IP addresses from NetworkSettings.
 If wrong Node.js version is running ➔ check Env for NODE_VERSION.
 ✅ This is real-world daily stuff for Docker developers and DevOps.
 
+
+Docker Networks 
+"docker network create --driver bridge name" This is how we can create a network using a bridge type
+"docker run -it --network <network-name> --name container-a <container-name>" This is how we can run containers and directly connect them to the network as well
+"docker network inspect <network-name> " This will help us inspect the network and know what all containers are there
+"docker network disconnect <network-name> <container-name/id>" This will disconnect the container from that specific network
