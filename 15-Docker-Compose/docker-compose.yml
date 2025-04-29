@@ -1,0 +1,21 @@
+version: '3'
+
+services:
+  test-service:
+   image: nginx
+   ports:
+     - "8081:80"
+   networks:
+     - test-net
+
+  test-box:
+   image: busybox
+   command: sleep 3600 #Here it keeps it alive for an hour
+   networks: 
+    - test-net
+
+#Here it to create a network which is of type bridge which is named as test-net
+networks:
+  test-net:
+   driver: bridge
+  

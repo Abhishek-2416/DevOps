@@ -1,0 +1,2 @@
+"docker-compose up -d{detached mode}" to get the docker-compose.yml to up and runnning
+"docker-compose down" to get it to stop

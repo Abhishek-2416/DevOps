@@ -1,0 +1,15 @@
+{
+  "name": "16-node-mongodb-dockercompose",
+  "version": "1.0.0",
+  "description": "Here we are creating a basic node and moongose app and then creating its container and using docker compose to run them",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Abhishek Alimchandani",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.1.0",
+    "mongoose": "^8.14.0"
+  }
+}

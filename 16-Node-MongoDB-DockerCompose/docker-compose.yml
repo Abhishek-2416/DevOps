@@ -1,0 +1,20 @@
+version: '3'
+
+services:
+ node-app:
+  build: . # So what this does is it looks into the docker file where we have mentioned the image and downloads it from there
+  ports:
+    - "4000:3000"
+  depends_on: 
+    - mongo-db
+  networks: 
+    - mongo-app-network
+
+ mongo-db: 
+  image: mongo
+  networks:
+   - mongo-app-network
+  
+networks:
+  mongo-app-network:
+    driver: bridge
