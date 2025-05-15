@@ -73,11 +73,12 @@ docker container stats
 - Containers are isolated user-space environments that share the host's Linux kernel. They are not full virtual machines but run as isolated processes. To access a shell inside a running container, we can run an interactive shell session like this: 
 
 ```
-docker container run -it --name proxy nginx bash
+docker container run -it --name proxy nginx/<name Of Container> bash/<command Inside shell>
 ```
 
 - If the container is not running presently then
 ```
+## docker exec [OPTIONS] CONTAINER COMMAND [ARG...] This is the syntax
 docker container restart <container-name>
 docker exec -it <container-name> bash
 ```
