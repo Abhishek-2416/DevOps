@@ -2,53 +2,58 @@ pipeline {
   agent any
 
   parameters {
-    choice( name: 'PROJECT',     choices: ['System Team - Platform Engineering (STPE)'],    description: 'Please enter the Project name')
-    choice( name: 'Issue Type',  choices: ['Story'],                                      description: 'Enter the Issue type')
-    string( name: 'Summary',     defaultValue: '',                                        description: 'Issue Summary')
-    choice( name: 'Assignee',    choices: ['Abhishek Alimchandani','Vandan Banda'],      description: 'Select the Assignee')
-    choice( name: 'Reporter',    choices: ['Tammy Reid'],                                  description: 'Select the Reporter')
-    choice( name: 'Epic Link',   choices: ['Jenkins Stabilization & Performance Enhancements'], description: 'Enter the Epic Link')
-    string( name: 'Description', defaultValue: '',                                        description: 'Enter the Story description')
+    choice( name: 'PROJECT',     choices: ['System Team - Platform Engineering (STPE)'],    description: 'Select the Project (key in parentheses)' )
+    choice( name: 'Issue Type',  choices: ['Story'],                                      description: 'Enter the Issue Type' )
+    string( name: 'Summary',     defaultValue: '',                                         description: 'Story Summary' )
+    choice( name: 'Assignee',    choices: ['Abhishek Alimchandani','Vandan Banda'],       description: 'Select the Assignee' )
+    choice( name: 'Reporter',    choices: ['Tammy Reid'],                                  description: 'Select the Reporter' )
+    choice( name: 'Epic Link',   choices: ['Jenkins Stabilization & Performance Enhancements'], description: 'Enter the Epic Link Key' )
+    string( name: 'Description', defaultValue: '',                                         description: 'Enter the Story Description' )
   }
 
   environment {
-    JIRA_BASE_URL = 'https://abhishekalimchandani1624.atlassian.net'
-    JIRA_USER     = 'abhishekalimchandani1624@gmail.com'
-    // Store your API token as a Secret Text credential with ID 'jira-api-token-id'
-    JIRA_TOKEN    = credentials('jira-api-token-id')
+    // This must match the “Name” you gave in Manage Jenkins → Configure System → JIRA Sites
+    JIRA_SITE = 'MYJIRA'
   }
 
   stages {
-    stage('Create Jira Story') {
+    stage('Create and Assign Jira Story') {
       steps {
         script {
-          // 1) cd into the folder containing both Jenkinsfile & helper
-          dir('17-Jira-Automation') {
-            // 2) load the helper; this gives you an object with createJiraStory()
-            def jira = load 'jiraUtil.groovy'
+          // 1) Extract the real JIRA key from your "Name (KEY)" choice:
+          def raw = params.PROJECT
+          def key = raw.replaceAll(/^.*\((.*)\)$/, '$1')
+          echo "Using project key: ${key}"
 
-            // 3) call the helper method on that object
-            def story = jira.createJiraStory(
-              env.JIRA_BASE_URL,
-              env.JIRA_USER,
-              env.JIRA_TOKEN,
-              params.PROJECT,
-              params['Issue Type'],
-              params.Summary,
-              params.Assignee,
-              params.Reporter,
-              params['Epic Link'],
-              params.Description
-            )
+          // 2) Create the story (including Epic Link) via the plugin:
+          def issueKey = jiraNewIssue(
+            site: JIRA_SITE,
+            issue: [
+              projectKey : key,
+              type       : params['Issue Type'],
+              summary    : params.Summary,
+              description: params.Description,
+              reporter   : params.Reporter,
+              assignee   : params.Assignee,
+              customfields: [
+                [ id: 'customfield_10008', value: params['Epic Link'] ]
+              ]
+            ]
+          )
+          echo "✅ Created JIRA Story ${issueKey}"
 
-            // 4) confirm in console
-            echo "✅ Created JIRA Story ${story.key}"
-            echo "🔗 URL: ${story.self}"
-          }
+          // 3) Ensure it’s assigned correctly:
+          jiraAssignIssue(
+            site: JIRA_SITE,
+            issueKey: issueKey,
+            assignee: params.Assignee
+          )
+          echo "👤 Assigned to ${params.Assignee}"
+
+          // 4) Print the browse URL
+          echo "🔗 https://abhishekalimchandani1624.atlassian.net/browse/${issueKey}"
         }
       }
     }
   }
 }
-
-
