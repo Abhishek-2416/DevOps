@@ -1,0 +1,25 @@
+pipeline {
+    agent any
+
+    parameters {
+        choice(name: 'PROJECT',choices: ['System Team - Platform Engineering (STPE)'], description: "Please enter the Project name")
+        choice(name: 'Issue Type',choices: ['Story'], description: "Enter the Issue type")
+        string(name: 'Summary',defaultValue: '',description: "Issue Summary")
+        choice(name: 'Assignee',choices: ['Abhishek Alimchandani','Vandan Banda'],description: "Select whom should it be assigned to")
+        choice(name: 'Reporter',choices: ['Tammy Reid'], description: "Select your reporter")
+        choice(name: 'Epic Link',choices: ['Jenkins Stabilization & Performance Enhancements'],description: "Enter your Epic Link")
+        choice(name: 'Component/s',choices: ['Jenkins'],description: "Enter the components")
+        string(name: 'Description',defaultValue: '', description: "Enter the entire description about the Story")
+    }
+
+    stages{
+        stage('Create Jira Story'){
+            steps{
+                script {
+                    def jira = load "${env.WORKSPACE}/jiraUtil.groovy"
+                    jira.createJiraStory():
+                }
+            }
+        }
+    }
+}

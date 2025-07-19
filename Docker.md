@@ -93,6 +93,22 @@ docker network ls
 ```
 
 ### To inspect a network 
+- One thing to remember is that whenever we run any container the docker directly attaches it to the bridge network
 ```
-docker network inspect
+docker network inspect <name Of Network>
+```
+
+### Create a network
+```
+docker network create --driver
+```
+
+### Attach a network to a container
+```
+docker network connect
+```
+
+### Detach a network from container
+```
+docker network disconnect
 ```
