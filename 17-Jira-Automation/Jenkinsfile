@@ -67,7 +67,6 @@ pipeline {
   environment {
     JIRA_BASE_URL = 'https://abhishekalimchandani1624.atlassian.net'
     JIRA_USER     = 'abhishekalimchandani1624@gmail.com'
-    // Your API token stored as Secret Text with ID 'jira-api-token-id'
     JIRA_TOKEN    = credentials('jira-api-token-id')
   }
 
@@ -75,7 +74,7 @@ pipeline {
     stage('Create Jira Story') {
       steps {
         script {
-          // --- 1) Build the JSON payload ---
+          // 1) Build payload and write to file
           def payload = [
             fields: [
               project          : [ key: params.PROJECT ],
@@ -87,33 +86,31 @@ pipeline {
               customfield_10008: params['Epic Link']
             ]
           ]
-          def jsonBody = groovy.json.JsonOutput.toJson(payload)
-          writeFile file: 'jira_payload.json', text: jsonBody
+          writeFile file: 'jira_payload.json', text: groovy.json.JsonOutput.toJson(payload)
 
-          // --- 2) Call JIRA via curl, capturing both body and HTTP code ---
-          // We append the HTTP code on a newline, then split it out.
-          def outputLines = sh(
-            script: """
-              set +x
-              RESPONSE=$(curl -s -w "\\n%{http_code}" \\
-                -H "Content-Type: application/json" \\
-                -u "${JIRA_USER}:${JIRA_TOKEN}" \\
-                -d @jira_payload.json \\
-                "${JIRA_BASE_URL}/rest/api/2/issue")
-              echo "$RESPONSE"
-            """,
+          // 2) Curl call capturing body + HTTP code
+          def response = sh(
+            script: '''#!/bin/bash
+set +x
+RESPONSE=$(curl -s -w "\\n%{http_code}" \
+  -H "Content-Type: application/json" \
+  -u "$JIRA_USER:$JIRA_TOKEN" \
+  -d @jira_payload.json \
+  "$JIRA_BASE_URL/rest/api/2/issue")
+echo "$RESPONSE"
+''',
             returnStdout: true
-          ).trim().split("\\n")
+          ).trim()
 
-          // Last line is the status code, everything before is the body
-          def httpCode = outputLines[-1]
-          def body     = outputLines[0..-2].join("\n")
+          // 3) Split out HTTP status and body
+          def lines    = response.readLines()
+          def httpCode = lines[-1]
+          def body     = lines.size() > 1 ? lines[0..-2].join('\n') : ''
 
-          // 3) Dump for debugging
           echo "HTTP Status: ${httpCode}"
           echo "Response Body:\n${body}"
 
-          // 4) Parse & handle
+          // 4) Handle success vs error
           if (httpCode == '201') {
             def json = new groovy.json.JsonSlurper().parseText(body)
             echo "✅ Created JIRA Story ${json.key}"
