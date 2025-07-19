@@ -67,7 +67,7 @@ pipeline {
   environment {
     JIRA_BASE_URL = 'https://abhishekalimchandani1624.atlassian.net'
     JIRA_USER     = 'abhishekalimchandani1624@gmail.com'
-    // Secret text credential containing your API token
+    // Your API token stored as Secret Text with ID 'jira-api-token-id'
     JIRA_TOKEN    = credentials('jira-api-token-id')
   }
 
@@ -75,7 +75,7 @@ pipeline {
     stage('Create Jira Story') {
       steps {
         script {
-          // 1) Build the JSON payload as a Groovy map
+          // --- 1) Build the JSON payload ---
           def payload = [
             fields: [
               project          : [ key: params.PROJECT ],
@@ -87,32 +87,40 @@ pipeline {
               customfield_10008: params['Epic Link']
             ]
           ]
-
-          // 2) Serialize to JSON text
           def jsonBody = groovy.json.JsonOutput.toJson(payload)
-
-          // 3) Write it to a temporary file in the workspace
           writeFile file: 'jira_payload.json', text: jsonBody
 
-          // 4) Call JIRA via curl (shell step)
-          //    -s: silent, -u: basic auth, -H: header, -d: @file
-          def response = sh(
+          // --- 2) Call JIRA via curl, capturing both body and HTTP code ---
+          // We append the HTTP code on a newline, then split it out.
+          def outputLines = sh(
             script: """
-              curl -s -X POST \\
+              set +x
+              RESPONSE=$(curl -s -w "\\n%{http_code}" \\
                 -H "Content-Type: application/json" \\
-                -u "${env.JIRA_USER}:${env.JIRA_TOKEN}" \\
+                -u "${JIRA_USER}:${JIRA_TOKEN}" \\
                 -d @jira_payload.json \\
-                "${env.JIRA_BASE_URL}/rest/api/2/issue"
+                "${JIRA_BASE_URL}/rest/api/2/issue")
+              echo "$RESPONSE"
             """,
             returnStdout: true
-          ).trim()
+          ).trim().split("\\n")
 
-          // 5) Parse the JSON response with JsonSlurper
-          def json = new groovy.json.JsonSlurper().parseText(response)
+          // Last line is the status code, everything before is the body
+          def httpCode = outputLines[-1]
+          def body     = outputLines[0..-2].join("\n")
 
-          // 6) Output the new issue key and URL
-          echo "✅ Created JIRA Story ${json.key}"
-          echo "🔗 ${json.self}"
+          // 3) Dump for debugging
+          echo "HTTP Status: ${httpCode}"
+          echo "Response Body:\n${body}"
+
+          // 4) Parse & handle
+          if (httpCode == '201') {
+            def json = new groovy.json.JsonSlurper().parseText(body)
+            echo "✅ Created JIRA Story ${json.key}"
+            echo "🔗 ${json.self}"
+          } else {
+            error("❌ Failed to create JIRA Story (HTTP ${httpCode})")
+          }
         }
       }
     }
