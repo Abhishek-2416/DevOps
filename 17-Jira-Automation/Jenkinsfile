@@ -55,19 +55,19 @@ pipeline {
   agent any
 
   parameters {
-    // full display string, including parentheses
-    choice( name: 'PROJECT',     choices: ['System Team - Platform Engineering (STPE)'],     description: 'Select the Project' )
-    choice( name: 'Issue Type',  choices: ['Story'],                                      description: 'Enter the Issue type' )
+    choice( name: 'PROJECT',     choices: ['System Team - Platform Engineering (STPE)'],    description: 'Select the Project (key in parentheses)' )
+    choice( name: 'Issue Type',  choices: ['Story'],                                      description: 'Enter the Issue Type' )
     string( name: 'Summary',     defaultValue: '',                                         description: 'Issue Summary' )
     choice( name: 'Assignee',    choices: ['Abhishek Alimchandani','Vandan Banda'],       description: 'Select the Assignee' )
     choice( name: 'Reporter',    choices: ['Tammy Reid'],                                  description: 'Select the Reporter' )
-    choice( name: 'Epic Link',   choices: ['Jenkins Stabilization & Performance Enhancements'], description: 'Enter the Epic Link key' )
-    string( name: 'Description', defaultValue: '',                                         description: 'Enter the Story description' )
+    choice( name: 'Epic Link',   choices: ['Jenkins Stabilization & Performance Enhancements'], description: 'Enter the Epic Link Key' )
+    string( name: 'Description', defaultValue: '',                                         description: 'Enter the Story Description' )
   }
 
   environment {
     JIRA_BASE_URL = 'https://abhishekalimchandani1624.atlassian.net'
     JIRA_USER     = 'abhishekalimchandani1624@gmail.com'
+    // Your API token stored as a Secret Text credential with ID 'jira-api-token-id'
     JIRA_TOKEN    = credentials('jira-api-token-id')
   }
 
@@ -75,54 +75,65 @@ pipeline {
     stage('Create Jira Story') {
       steps {
         script {
-          // 1) Extract the project key from the full display string
+          // --- 1) Define helper (no checkStoryExist, no labels) ---
+          import groovy.json.JsonOutput
+          import groovy.json.JsonSlurper
+
+          def createStory = { projectKey, issueType, summary, description, assignee, reporter, epicLink ->
+            def urlCreate   = "${env.JIRA_BASE_URL}/rest/api/2/issue"
+            def payload     = [
+              fields: [
+                project          : [ key: projectKey ],
+                issuetype        : [ name: issueType ],
+                summary          : summary,
+                description      : description,
+                assignee         : [ name: assignee ],
+                reporter         : [ name: reporter ],
+                customfield_10008: epicLink
+              ]
+            ]
+            def requestBody = JsonOutput.toJson(payload)
+
+            // Build Basic Auth header from your env vars
+            def authHeader = "Basic " + "${env.JIRA_USER}:${env.JIRA_TOKEN}"
+                                .bytes.encodeBase64()
+                                .toString()
+
+            // fire the request
+            def response = httpRequest(
+              httpMode       : 'POST',
+              url            : urlCreate,
+              contentType    : 'APPLICATION_JSON',
+              requestBody    : requestBody,
+              customHeaders  : [[ name: 'Authorization', value: authHeader ]],
+              validResponseCodes: '201'
+            )
+
+            // parse the 201 response
+            def json      = new JsonSlurper().parseText(response.content)
+            def storyKey  = json.key
+            println "Jira Story Created: ${storyKey}"
+            return "${env.JIRA_BASE_URL}/browse/${storyKey}"
+          }
+
+          // --- 2) Extract the real key from your full PROJECT parameter ---
           def rawProject = params.PROJECT
-          def matcher    = (rawProject =~ /\(([^)]+)\)/)
-          def projectKey = matcher ? matcher[0][1] : rawProject
+          def projectKey = rawProject.replaceAll(/^.*\((.*)\)$/, '$1')
           echo "Using project key: ${projectKey}"
 
-          // 2) Build the JSON payload
-          def payload = [
-            fields: [
-              project          : [ key: projectKey ],
-              issuetype        : [ name: params['Issue Type'] ],
-              summary          : params.Summary,
-              description      : params.Description,
-              assignee         : [ name: params.Assignee ],
-              reporter         : [ name: params.Reporter ],
-              customfield_10008: params['Epic Link']
-            ]
-          ]
-          writeFile file: 'jira_payload.json', text: groovy.json.JsonOutput.toJson(payload)
+          // --- 3) Call it with your parameters ---
+          def storyUrl = createStory(
+            projectKey,
+            params['Issue Type'],
+            params.Summary,
+            params.Description,
+            params.Assignee,
+            params.Reporter,
+            params['Epic Link']
+          )
 
-          // 3) Send via curl, capturing body and HTTP code
-          def response = sh(
-            script: '''#!/bin/bash
-RESPONSE=$(curl -s -w "\\n%{http_code}" \
-  -H "Content-Type: application/json" \
-  -u "$JIRA_USER:$JIRA_TOKEN" \
-  -d @jira_payload.json \
-  "$JIRA_BASE_URL/rest/api/2/issue")
-echo "$RESPONSE"
-''',
-            returnStdout: true
-          ).trim().readLines()
-
-          // 4) Separate status from body
-          def httpCode = response[-1]
-          def body     = response.size()>1 ? response[0..-2].join('\n') : ''
-
-          echo "HTTP Status: ${httpCode}"
-          echo "Response Body:\n${body}"
-
-          // 5) Handle response
-          if (httpCode == '201') {
-            def json = new groovy.json.JsonSlurper().parseText(body)
-            echo "✅ Created JIRA Story ${json.key}"
-            echo "🔗 ${json.self}"
-          } else {
-            error("❌ Failed to create JIRA Story (HTTP ${httpCode})")
-          }
+          // --- 4) Done ---
+          echo "✅ Story URL: ${storyUrl}"
         }
       }
     }
