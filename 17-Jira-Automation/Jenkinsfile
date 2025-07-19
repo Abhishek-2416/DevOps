@@ -51,6 +51,9 @@
 //   }
 // }
 
+import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
+
 pipeline {
   agent any
 
@@ -76,8 +79,7 @@ pipeline {
       steps {
         script {
           // --- 1) Define helper (no checkStoryExist, no labels) ---
-          import groovy.json.JsonOutput
-          import groovy.json.JsonSlurper
+          
 
           def createStory = { projectKey, issueType, summary, description, assignee, reporter, epicLink ->
             def urlCreate   = "${env.JIRA_BASE_URL}/rest/api/2/issue"
