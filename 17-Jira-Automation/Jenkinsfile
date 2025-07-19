@@ -1,46 +1,71 @@
-pipeline {
-    agent any
-    
+// jiraUtil.groovy
+import groovy.json.JsonBuilder
+import groovy.json.JsonSlurper
 
-    parameters {
-        choice(name: 'PROJECT',choices: ['System Team - Platform Engineering (STPE)'], description: "Please enter the Project name")
-        choice(name: 'Issue Type',choices: ['Story'], description: "Enter the Issue type")
-        string(name: 'Summary',defaultValue: '',description: "Issue Summary")
-        choice(name: 'Assignee',choices: ['Abhishek Alimchandani','Vandan Banda'],description: "Select whom should it be assigned to")
-        choice(name: 'Reporter',choices: ['Tammy Reid'], description: "Select your reporter")
-        choice(name: 'Epic Link',choices: ['Jenkins Stabilization & Performance Enhancements'],description: "Enter your Epic Link")
-        //choice(name: 'Component/s',choices: ['Jenkins'],description: "Enter the components")
-        string(name: 'Description',defaultValue: '', description: "Enter the entire description about the Story")
-    }
+/**
+ * Creates a JIRA issue (Story) with the given fields.
+ *
+ * @param baseUrl     JIRA root URL (e.g. https://your-domain.atlassian.net)
+ * @param username    Atlassian account email
+ * @param apiToken    Atlassian API token
+ * @param projectKey  JIRA project key (e.g. "STPE")
+ * @param issueType   Issue type name (e.g. "Story")
+ * @param summary     Issue summary/title
+ * @param assignee    Username to assign the issue to
+ * @param reporter    Username reporting the issue
+ * @param epicLink    Epic key (goes into customfield_10008)
+ * @param description Issue description text
+ * @return            Parsed JSON response (contains .key, .self, etc.)
+ */
+def createJiraStory(String baseUrl,
+                    String username,
+                    String apiToken,
+                    String projectKey,
+                    String issueType,
+                    String summary,
+                    String assignee,
+                    String reporter,
+                    String epicLink,
+                    String description) {
+    // 1) Open connection
+    def endpoint   = "${baseUrl}/rest/api/2/issue"
+    def connection = new URL(endpoint).openConnection()
+    connection.requestMethod = 'POST'
+    connection.doOutput      = true
 
-    environment {
-        JIRA_BASE_URL = 'https://abhishekalimchandani1624.atlassian.net'
-        JIRA_USER = "abhishekalimchandani1624@gmail.com"
-        JIRA_TOKEN="ATATT3xFfGF0d9NMW5qDmiGFjKWg9VTEEG4nfjICwwm7SvvbDUYxhkzYY-XZ0OUcr-kBGuww0x5djbeKzOu3Fkvg_aqWBf7nfI8E1steXBkk_tLr018gatYC-fBPXcUHTLQ72YOtIsyy4d7-EpupSB1jssMi2yMc_Jkl4J03Qh0VhP45NeTRD9E=44C2A34D"
-    }
+    // 2) Set headers
+    connection.setRequestProperty('Content-Type', 'application/json')
+    def creds = "${username}:${apiToken}".bytes.encodeBase64().toString()
+    connection.setRequestProperty('Authorization', "Basic ${creds}")
 
-    stages{
-        stage('Create Jira Story'){
-            steps{
-                script {
-                    def jira = load "${env.WORKSPACE}/jiraUtil.groovy"
-                    
-                    def story = jira.createJiraStory(
-                        env.JIRA_BASE_URL,
-                        env.JIRA_USER,
-                        env.JIRA_TOKEN,
-                        params.PROJECT,
-                        params['Issue Type'],
-                        params.Summary,
-                        params.Assignee,
-                        params.Reporter,
-                        params['Epic Link'],
-                        params.Description
-                    )
+    // 3) Build fields map
+    def fields = [
+      project          : [ key: projectKey ],
+      issuetype        : [ name: issueType ],
+      summary          : summary,
+      description      : description,
+      assignee         : [ name: assignee ],
+      reporter         : [ name: reporter ],
+      customfield_10008: epicLink
+    ]
 
-                    echo "✅ Created JIRA Story ${story.key}"
-                }
-            }
-        }
+    // 4) Serialize payload
+    def payload  = [ fields: fields ]
+    def jsonBody = new JsonBuilder(payload).toString()
+
+    // 5) Send JSON
+    connection.outputStream.withWriter('UTF-8') { it << jsonBody }
+
+    // 6) Handle response
+    def code = connection.responseCode
+    if (code == 201) {
+        def resp = new JsonSlurper().parseText(connection.inputStream.text)
+        println "✅ Created ${resp.key}"
+        return resp
+    } else {
+        def err = connection.errorStream?.text ?: 'No details'
+        throw new RuntimeException("JIRA createStory failed (HTTP $code): $err")
     }
 }
+
+// Return this script’s binding so `load` can expose createJiraStory()
