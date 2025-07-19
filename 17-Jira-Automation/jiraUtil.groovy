@@ -67,3 +67,6 @@ def createJiraStory(String baseUrl,
             error("JIRA createStory failed (HTTP $responseCode): $err")
         }
     }
+
+
+return this
