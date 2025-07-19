@@ -14,7 +14,7 @@ pipeline {
   environment {
     JIRA_BASE_URL = 'https://abhishekalimchandani1624.atlassian.net'
     JIRA_USER     = 'abhishekalimchandani1624@gmail.com'
-    JIRA_TOKEN    = 'ATATT3xFfGF0d9NMW5qDmiGFjKWg9VTEEG4nfjICwwm7SvvbDUYxhkzYY-XZ0OUcr-…'
+    JIRA_TOKEN = credentials('jira-api-token-id')
   }
 
   stages {
