@@ -58,7 +58,7 @@ pipeline {
   agent any
 
   parameters {
-    choice( name: 'PROJECT',     choices: ['System Team - Platform Engineering (STPE)'],     description: 'Select the Project' )
+    choice( name: 'PROJECT',     choices: ['System Team - Platform Engineering (STPE)'],    description: 'Select the Project (key in parentheses)' )
     choice( name: 'Issue Type',  choices: ['Story'],                                      description: 'Enter the Issue Type' )
     string( name: 'Summary',     defaultValue: '',                                         description: 'Issue Summary' )
     choice( name: 'Assignee',    choices: ['Abhishek Alimchandani','Vandan Banda'],       description: 'Select the Assignee' )
@@ -68,72 +68,68 @@ pipeline {
   }
 
   environment {
-    // your constants.jiraUrl under the hood
     JIRA_BASE_URL = 'https://abhishekalimchandani1624.atlassian.net'
-    // a Jenkins credential (username + API token) with ID 'ServiceJenkins'
-    // configured under Manage Jenkins → Credentials
-    JIRA_CRED_ID  = 'ServiceJenkins'
+    // Credential ID containing your JIRA username + API token
+    JIRA_CRED_ID  = credentials('jira-api-token-id')
   }
 
   stages {
     stage('Create Jira Story') {
       steps {
         script {
-          import groovy.json.JsonOutput
-          import groovy.json.JsonSlurper
-
-          // --- 1) Helper in the exact shape you provided, minus check & labels ---
-          def createStory = { projectKey, summary, description, assignee ->
-            def urlCreate   = "${constants.jiraUrl}/rest/api/2/issue"
-            def requestBody = JsonOutput.toJson([
+          // --- your helper definition, no checkStoryExist or labels ---
+          def createStory = { projectKey, issueType, summary, description, assignee, reporter, epicLink ->
+            def urlCreate   = "${env.JIRA_BASE_URL}/rest/api/2/issue"
+            def payload     = [
               fields: [
-                project   : [ key: projectKey ],
-                summary   : summary,
-                description: description,
-                issuetype : [ name: "Story" ]
+                project          : [ key: projectKey ],
+                issuetype        : [ name: issueType ],
+                summary          : summary,
+                description      : description,
+                assignee         : [ name: assignee ],
+                reporter         : [ name: reporter ],
+                customfield_10008: epicLink
               ]
-            ])
+            ]
+            def requestBody = JsonOutput.toJson(payload)
 
-            try {
-              // HTTP Request plugin wrapper
-              def resp = httpRequestJson(
-                'POST',
-                urlCreate,
-                JIRA_CRED_ID,
-                requestBody
-              )
-              def json = new JsonSlurper().parseText(resp.content)
-              def storyKey = json.key
-              println "Jira Story Created: ${storyKey}"
+            // use the HTTP Request plugin with your credential
+            def resp = httpRequest(
+              httpMode            : 'POST',
+              url                 : urlCreate,
+              authentication      : env.JIRA_CRED_ID,
+              contentType         : 'APPLICATION_JSON',
+              requestBody         : requestBody,
+              validResponseCodes  : '201'
+            )
 
-              // assignStory is your existing helper
-              assignStory(storyKey, assignee)
+            // parse and assign
+            def json     = new JsonSlurper().parseText(resp.content)
+            def storyKey = json.key
+            println "Jira Story Created: ${storyKey}"
+            assignStory(storyKey, assignee)
 
-              return "${constants.jiraUrl}/browse/${storyKey}"
-            } catch (e) {
-              // your existing error-reporting helper
-              sendChat(
-                "Error creating JIRA Story: ${e.message}",
-                constants.getJenkinsSupportNotificationsChatRoomId()
-              )
-              error("JIRA createStory failed: ${e.message}")
-            }
+            // return the browse URL
+            return "${env.JIRA_BASE_URL}/browse/${storyKey}"
           }
 
-          // --- 2) Pull the real key (STPE) out of the display string ---
+          // --- extract the actual JIRA key from your full PROJECT string ---
           def rawProject = params.PROJECT
           def projectKey = rawProject.replaceAll(/^.*\((.*)\)$/, '$1')
           echo "Using project key: ${projectKey}"
 
-          // --- 3) Call your helper with exactly the 4 params you wanted ---
+          // --- invoke the helper with your 7 parameters ---
           def storyUrl = createStory(
             projectKey,
+            params['Issue Type'],
             params.Summary,
             params.Description,
-            params.Assignee
+            params.Assignee,
+            params.Reporter,
+            params['Epic Link']
           )
 
-          // --- 4) Output the final URL ---
+          // --- final output ---
           echo "✅ Story URL: ${storyUrl}"
         }
       }
