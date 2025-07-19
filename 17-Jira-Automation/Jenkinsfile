@@ -12,7 +12,7 @@ pipeline {
   }
 
   environment {
-    // This must match the “Name” you gave in Manage Jenkins → Configure System → JIRA Sites
+    // Must match the “Name” configured in Manage Jenkins → Configure System → JIRA Sites
     JIRA_SITE = 'MYJIRA'
   }
 
@@ -20,37 +20,33 @@ pipeline {
     stage('Create and Assign Jira Story') {
       steps {
         script {
-          // 1) Extract the real JIRA key from your "Name (KEY)" choice:
+          // 1) Extract the JIRA key from the display string:
           def raw = params.PROJECT
           def key = raw.replaceAll(/^.*\((.*)\)$/, '$1')
           echo "Using project key: ${key}"
 
-          // 2) Create the story (including Epic Link) via the plugin:
+          // 2) Create the story via direct parameters:
           def issueKey = jiraNewIssue(
-            site: JIRA_SITE,
-            issue: [
-              projectKey : key,
-              type       : params['Issue Type'],
-              summary    : params.Summary,
-              description: params.Description,
-              reporter   : params.Reporter,
-              assignee   : params.Assignee,
-              customfields: [
-                [ id: 'customfield_10008', value: params['Epic Link'] ]
-              ]
-            ]
+            site       : JIRA_SITE,
+            projectKey : key,
+            issueType  : params['Issue Type'],
+            summary    : params.Summary,
+            description: params.Description,
+            reporter   : params.Reporter,
+            assignee   : params.Assignee,
+            customfields: [[ id: 'customfield_10008', value: params['Epic Link'] ]]
           )
           echo "✅ Created JIRA Story ${issueKey}"
 
-          // 3) Ensure it’s assigned correctly:
+          // 3) Assign the issue (in case the create step didn’t respect assignee):
           jiraAssignIssue(
-            site: JIRA_SITE,
+            site    : JIRA_SITE,
             issueKey: issueKey,
             assignee: params.Assignee
           )
           echo "👤 Assigned to ${params.Assignee}"
 
-          // 4) Print the browse URL
+          // 4) Print the browse URL:
           echo "🔗 https://abhishekalimchandani1624.atlassian.net/browse/${issueKey}"
         }
       }
