@@ -19,33 +19,30 @@ pipeline {
 
   stages {
     stage('Create Jira Story') {
-      steps {
-        // ensure your workspace is populated
-        checkout scm
+        steps {
+            script {
+            // 1) load the helper and capture its binding
+            def jira = load "${env.WORKSPACE}/17-Jira-Automation/jiraUtil.groovy"
 
-        script {
-          // 1) load helper
-          def jira = load "${env.WORKSPACE}/17-Jira-Automation/jiraUtil.groovy"
+            // 2) invoke the method on that binding
+            def story = jira.createJiraStory(
+                env.JIRA_BASE_URL,
+                env.JIRA_USER,
+                env.JIRA_TOKEN,
+                params.PROJECT,
+                params['Issue Type'],
+                params.Summary,
+                params.Assignee,
+                params.Reporter,
+                params['Epic Link'],
+                params.Description
+            )
 
-          // 2) call it with all your parameters
-          def story = jira.createJiraStory(
-            env.JIRA_BASE_URL,
-            env.JIRA_USER,
-            env.JIRA_TOKEN,
-            params.PROJECT,
-            params['Issue Type'],
-            params.Summary,
-            params.Assignee,
-            params.Reporter,
-            params['Epic Link'],
-            params.Description
-          )
-
-          // 3) echo both key and URL
-          echo "✅ Created JIRA Story ${story.key}"
-          echo "🔗 URL: ${story.self}"
+            // 3) report back
+            echo "✅ Created JIRA Story ${story.key}"
+            echo "🔗 ${story.self}"
+            }
         }
-      }
-    }
+        }
   }
 }
