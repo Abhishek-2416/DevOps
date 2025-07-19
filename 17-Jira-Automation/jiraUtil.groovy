@@ -1,72 +1,66 @@
 import groovy.json.JsonBuilder
 import groovy.json.JsonSlurper
 
-def baseUrl = "https://abhishekalimchandani1624.atlassian.net";
-def endPoint = "${baseUrl}/rest/api/2/issue"
-
+/**
+ * Creates a JIRA Story and returns the parsed response.
+ *
+ * @param baseUrl     your JIRA root URL
+ * @param username    your Atlassian account email
+ * @param apiToken    your JIRA API token
+ * @param projectKey  JIRA project key (e.g. "STPE")
+ * @param issueType   Issue type name (e.g. "Story")
+ * @param summary     Issue summary/title
+ * @param assignee    Username to assign to
+ * @param reporter    Username reporting the issue
+ * @param epicLink    Epic key (goes into customfield_10008)
+ * @param description Issue description
+ * @return            Map with at least `.key` and `.self`
+ */
 def createJiraStory(String baseUrl,
-    String username,
-    String apiToken,
-    String projectKey,
-    String issueType,
-    String summary,
-    String assignee,
-    String reporter,
-    String epicLink,
-    List<String> components,
-    String description){
-        def connection = new URL(endPoint).openConnection()
-        connection.requestMethod = 'POST'   // we’re creating something
-        connection.doOutput      = true  
+                    String username,
+                    String apiToken,
+                    String projectKey,
+                    String issueType,
+                    String summary,
+                    String assignee,
+                    String reporter,
+                    String epicLink,
+                    String description) {
+    def endpoint   = "${baseUrl}/rest/api/2/issue"
+    def conn       = new URL(endpoint).openConnection()
+    conn.requestMethod = 'POST'
+    conn.doOutput      = true
 
-        //Tell JIRA we are sending JSON
-        connection.setRequestProperty('Content-Type', 'application/json')
+    // Headers
+    conn.setRequestProperty('Content-Type', 'application/json')
+    def creds = "${username}:${apiToken}".bytes.encodeBase64().toString()
+    conn.setRequestProperty('Authorization', "Basic ${creds}")
 
-        // //Build and set Basic Auth header
-        def creds = "${username}:${apiToken}".bytes.encodeBase64().toString()
-        connection.setRequestProperty('Authorization', "Basic ${creds}")
+    // Build the JSON payload
+    def fields = [
+      project          : [ key: projectKey ],
+      issuetype        : [ name: issueType ],
+      summary          : summary,
+      description      : description,
+      assignee         : [ name: assignee ],
+      reporter         : [ name: reporter ],
+      customfield_10008: epicLink
+    ]
+    def payload  = [ fields: fields ]
+    def jsonBody = new JsonBuilder(payload).toString()
 
-        def fields = [
-            project: [key: projectKey],
-            issuetype: [name: issueType],
-            summary: summary,
-            assignee: [name: assignee],
-            reporter: [name: reporter],
-            customfield_10008: epicLink,
-            description: description
-        ]
+    // Send it
+    conn.outputStream.withWriter('UTF-8') { it << jsonBody }
 
-        // def fields = [
-        //     project: [key: PROJECT],
-        //     issuetype: [name:['Issue Type']],
-        //     summary: params.Summary,
-        //     assignee: [name: params['Assignee']],
-        //     reporter: [name: params['Reporter']],
-        //     customfield_10008: params['Epic Link'],
-        //     description: params.Description
-        // ]
-
-        //Now these fields shall go inside the JSON
-        def payload = [fields: fields]
-
-        //Seralise to JSON String
-        def jsonBody = new JsonBuilder(payload).toString()
-
-        //Send the JSON into the connection
-        connection.outputStream.withWriter('UTF-8'){
-            writer -> writer << jsonBody
-        }
-
-        def responseCode = connection.responseCode
-        if (responseCode == 201) {
-            def resp = new JsonSlurper().parseText(connection.inputStream.text)
-            println "✅ Created ${resp.key}"
-            return resp
-        } else {
-            def err = connection.errorStream?.text ?: 'No details'
-            error("JIRA createStory failed (HTTP $responseCode): $err")
-        }
+    // Handle response
+    def code = conn.responseCode
+    if (code == 201) {
+        return new JsonSlurper().parseText(conn.inputStream.text)
+    } else {
+        def err = conn.errorStream?.text ?: 'No details'
+        throw new RuntimeException("JIRA createStory failed (HTTP $code): $err")
     }
+}
 
-
+// so that `load 'jiraUtil.groovy'` returns this binding
 return this
