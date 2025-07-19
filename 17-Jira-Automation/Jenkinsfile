@@ -1,55 +1,42 @@
-pipeline {
-  agent any
+stage('Create and Assign Jira Story') {
+  steps {
+    script {
+      // 1) Extract the JIRA key
+      def raw = params.PROJECT
+      def projKey = raw.replaceAll(/^.*\((.*)\)$/, '$1')
+      echo "Using project key: ${projKey}"
 
-  parameters {
-    choice( name: 'PROJECT',     choices: ['System Team - Platform Engineering (STPE)'],    description: 'Select the Project (key in parentheses)' )
-    choice( name: 'Issue Type',  choices: ['Story'],                                      description: 'Enter the Issue Type' )
-    string( name: 'Summary',     defaultValue: '',                                         description: 'Story Summary' )
-    choice( name: 'Assignee',    choices: ['Abhishek Alimchandani','Vandan Banda'],       description: 'Select the Assignee' )
-    choice( name: 'Reporter',    choices: ['Tammy Reid'],                                  description: 'Select the Reporter' )
-    choice( name: 'Epic Link',   choices: ['Jenkins Stabilization & Performance Enhancements'], description: 'Enter the Epic Link Key' )
-    string( name: 'Description', defaultValue: '',                                         description: 'Enter the Story Description' )
-  }
+      // 2) Build the inner fields map exactly as the REST API wants
+      def fieldsMap = [
+        project          : [ key: projKey ],
+        issuetype        : [ name: params['Issue Type'] ],
+        summary          : params.Summary,
+        description      : params.Description,
+        assignee         : [ name: params.Assignee ],
+        reporter         : [ name: params.Reporter ],
+        customfield_10008: params['Epic Link']
+      ]
 
-  environment {
-    // Must match the “Name” configured in Manage Jenkins → Configure System → JIRA Sites
-    JIRA_SITE = 'MYJIRA'
-  }
+      // 3) Wrap it in the `issue: [ fields: … ]` envelope
+      def issuePayload = [ fields: fieldsMap ]
 
-  stages {
-    stage('Create and Assign Jira Story') {
-      steps {
-        script {
-          // 1) Extract the JIRA key from the display string:
-          def raw = params.PROJECT
-          def key = raw.replaceAll(/^.*\((.*)\)$/, '$1')
-          echo "Using project key: ${key}"
+      // 4) Call jiraNewIssue with the nested payload
+      def issueKey = jiraNewIssue(
+        site : 'MYJIRA',
+        issue: issuePayload
+      )
+      echo "✅ Created JIRA Story ${issueKey}"
 
-          // 2) Create the story via direct parameters:
-          def issueKey = jiraNewIssue(
-            site       : JIRA_SITE,
-            projectKey : key,
-            issueType  : params['Issue Type'],
-            summary    : params.Summary,
-            description: params.Description,
-            reporter   : params.Reporter,
-            assignee   : params.Assignee,
-            customfields: [[ id: 'customfield_10008', value: params['Epic Link'] ]]
-          )
-          echo "✅ Created JIRA Story ${issueKey}"
+      // 5) Assign just in case
+      jiraAssignIssue(
+        site    : 'MYJIRA',
+        issueKey: issueKey,
+        assignee: params.Assignee
+      )
+      echo "👤 Assigned to ${params.Assignee}"
 
-          // 3) Assign the issue (in case the create step didn’t respect assignee):
-          jiraAssignIssue(
-            site    : JIRA_SITE,
-            issueKey: issueKey,
-            assignee: params.Assignee
-          )
-          echo "👤 Assigned to ${params.Assignee}"
-
-          // 4) Print the browse URL:
-          echo "🔗 https://abhishekalimchandani1624.atlassian.net/browse/${issueKey}"
-        }
-      }
+      // 6) Print URL
+      echo "🔗 https://abhishekalimchandani1624.atlassian.net/browse/${issueKey}"
     }
   }
 }
