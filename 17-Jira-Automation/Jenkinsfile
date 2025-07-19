@@ -8,7 +8,7 @@ pipeline {
     choice( name: 'PROJECT',     choices: ['System Team - Platform Engineering (STPE)'],     description: 'Select the Project (key in parentheses)' )
     choice( name: 'Issue Type',  choices: ['Story'],                                      description: 'Enter the Issue Type' )
     string( name: 'Summary',     defaultValue: '',                                         description: 'Story Summary' )
-    choice( name: 'Assignee',    choices: ['Abhishek Alimchandani','Vandan Banda'],       description: 'Select the Assignee' )
+    choice( name: 'Assignee',    choices: ['Abhishek Alimchandani','Vandana Banda'],       description: 'Select the Assignee' )
     choice( name: 'Reporter',    choices: ['Tammy Reid'],                                  description: 'Select the Reporter' )
     choice( name: 'Epic Link',   choices: ['Jenkins Stabilization & Performance Enhancements'], description: 'Enter the Epic Link Key' )
     string( name: 'Description', defaultValue: '',                                         description: 'Enter the Story Description' )
@@ -22,11 +22,6 @@ pipeline {
     stage('Create and Assign Jira Story') {
       steps {
         script {
-          // 1) Pull out the real project key (e.g. "STPE")
-          def raw    = params.PROJECT
-          def projKey= raw.replaceAll(/^.*\((.*)\)$/, '$1')
-          echo "Using project key: ${projKey}"
-
           // 2) Build the JIRA fields map
           def fieldsMap = [
             project          : [ key: projKey ],
