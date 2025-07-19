@@ -69,3 +69,4 @@ def createJiraStory(String baseUrl,
 }
 
 // Return this script’s binding so `load` can expose createJiraStory()
+return this
