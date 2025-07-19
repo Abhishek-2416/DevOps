@@ -25,7 +25,7 @@ pipeline {
 
         script {
           // 1) load helper
-          def jira = load "${env.WORKSPACE}/jiraUtil.groovy"
+          def jira = load "${env.WORKSPACE}/17-Jira-Automation/jiraUtil.groovy"
 
           // 2) call it with all your parameters
           def story = jira.createJiraStory(
