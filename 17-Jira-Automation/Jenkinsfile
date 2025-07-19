@@ -1,20 +1,78 @@
+// pipeline {
+//   agent any
+
+//   parameters {
+//     choice( name: 'PROJECT',     choices: ['System Team - Platform Engineering (STPE)'],    description: 'Please enter the Project name')
+//     choice( name: 'Issue Type',  choices: ['Story'],                                      description: 'Enter the Issue type')
+//     string( name: 'Summary',     defaultValue: '',                                        description: 'Issue Summary')
+//     choice( name: 'Assignee',    choices: ['Abhishek Alimchandani','Vandan Banda'],      description: 'Select the Assignee')
+//     choice( name: 'Reporter',    choices: ['Tammy Reid'],                                  description: 'Select the Reporter')
+//     choice( name: 'Epic Link',   choices: ['Jenkins Stabilization & Performance Enhancements'], description: 'Enter the Epic Link')
+//     string( name: 'Description', defaultValue: '',                                        description: 'Enter the Story description')
+//   }
+
+//   environment {
+//     JIRA_BASE_URL = 'https://abhishekalimchandani1624.atlassian.net'
+//     JIRA_USER     = 'abhishekalimchandani1624@gmail.com'
+//     // Store your API token as a Secret Text credential with ID 'jira-api-token-id'
+//     JIRA_TOKEN    = credentials('jira-api-token-id')
+//   }
+
+//   stages {
+//     stage('Create Jira Story') {
+//       steps {
+//         script {
+//           // 1) cd into the folder containing both Jenkinsfile & helper
+//           dir('17-Jira-Automation') {
+//             // 2) load the helper; this gives you an object with createJiraStory()
+//             def jira = load 'jiraUtil.groovy'
+
+//             // 3) call the helper method on that object
+//             def story = jira.createJiraStory(
+//               env.JIRA_BASE_URL,
+//               env.JIRA_USER,
+//               env.JIRA_TOKEN,
+//               params.PROJECT,
+//               params['Issue Type'],
+//               params.Summary,
+//               params.Assignee,
+//               params.Reporter,
+//               params['Epic Link'],
+//               params.Description
+//             )
+
+//             // 4) confirm in console
+//             echo "✅ Created JIRA Story ${story.key}"
+//             echo "🔗 URL: ${story.self}"
+//           }
+//         }
+//       }
+//     }
+//   }
+// }
+
 pipeline {
   agent any
 
   parameters {
-    choice( name: 'PROJECT',     choices: ['System Team - Platform Engineering (STPE)'],    description: 'Please enter the Project name')
-    choice( name: 'Issue Type',  choices: ['Story'],                                      description: 'Enter the Issue type')
-    string( name: 'Summary',     defaultValue: '',                                        description: 'Issue Summary')
-    choice( name: 'Assignee',    choices: ['Abhishek Alimchandani','Vandan Banda'],      description: 'Select the Assignee')
-    choice( name: 'Reporter',    choices: ['Tammy Reid'],                                  description: 'Select the Reporter')
-    choice( name: 'Epic Link',   choices: ['Jenkins Stabilization & Performance Enhancements'], description: 'Enter the Epic Link')
-    string( name: 'Description', defaultValue: '',                                        description: 'Enter the Story description')
+    choice( name: 'PROJECT',     choices: ['System Team - Platform Engineering (STPE)'],     description: 'Please enter the Project name' )
+    choice( name: 'Issue Type',  choices: ['Story'],                                       description: 'Enter the Issue type' )
+    string( name: 'Summary',     defaultValue: '',                                         description: 'Issue Summary' )
+    choice( name: 'Assignee',    choices: ['Abhishek Alimchandani','Vandan Banda'],       description: 'Select the Assignee' )
+    choice( name: 'Reporter',    choices: ['Tammy Reid'],                                 description: 'Select the Reporter' )
+    choice( name: 'Epic Link',   choices: ['Jenkins Stabilization & Performance Enhancements'], description: 'Enter the Epic Link' )
+    string( name: 'Description', defaultValue: '',                                         description: 'Enter the Story description' )
   }
 
   environment {
+    // The JIRA Plugin uses the "site" configured under Manage Jenkins → Configure System → JIRA Sites.
+    // Suppose you named it "MYJIRA".
+    JIRA_SITE = 'MYJIRA'
+
+    // (Optional) If you still need these elsewhere:
     JIRA_BASE_URL = 'https://abhishekalimchandani1624.atlassian.net'
     JIRA_USER     = 'abhishekalimchandani1624@gmail.com'
-    // Store your API token as a Secret Text credential with ID 'jira-api-token-id'
+    // If you want the raw token in env.JIRA_TOKEN too:
     JIRA_TOKEN    = credentials('jira-api-token-id')
   }
 
@@ -22,29 +80,25 @@ pipeline {
     stage('Create Jira Story') {
       steps {
         script {
-          // 1) cd into the folder containing both Jenkinsfile & helper
-          dir('17-Jira-Automation') {
-            // 2) load the helper; this gives you an object with createJiraStory()
-            def jira = load 'jiraUtil.groovy'
+          // Using the Jenkins JIRA Plugin step jiraNewIssue:
+          def newKey = jiraNewIssue(
+            site: env.JIRA_SITE, 
+            issue: [
+              projectKey : params.PROJECT,
+              type       : params['Issue Type'],
+              summary    : params.Summary,
+              description: params.Description,
+              assignee   : params.Assignee,
+              reporter   : params.Reporter,
+              customfields: [
+                [ id: 'customfield_10008', value: params['Epic Link'] ]
+              ]
+            ]
+          )
 
-            // 3) call the helper method on that object
-            def story = jira.createJiraStory(
-              env.JIRA_BASE_URL,
-              env.JIRA_USER,
-              env.JIRA_TOKEN,
-              params.PROJECT,
-              params['Issue Type'],
-              params.Summary,
-              params.Assignee,
-              params.Reporter,
-              params['Epic Link'],
-              params.Description
-            )
-
-            // 4) confirm in console
-            echo "✅ Created JIRA Story ${story.key}"
-            echo "🔗 URL: ${story.self}"
-          }
+          // Confirmation output
+          echo "✅ Created JIRA Story ${newKey}"
+          echo "🔗 https://abhishekalimchandani1624.atlassian.net/browse/${newKey}"
         }
       }
     }
