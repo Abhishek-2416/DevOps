@@ -59,20 +59,15 @@ pipeline {
     choice( name: 'Issue Type',  choices: ['Story'],                                       description: 'Enter the Issue type' )
     string( name: 'Summary',     defaultValue: '',                                         description: 'Issue Summary' )
     choice( name: 'Assignee',    choices: ['Abhishek Alimchandani','Vandan Banda'],       description: 'Select the Assignee' )
-    choice( name: 'Reporter',    choices: ['Tammy Reid'],                                 description: 'Select the Reporter' )
+    choice( name: 'Reporter',    choices: ['Tammy Reid'],                                  description: 'Select the Reporter' )
     choice( name: 'Epic Link',   choices: ['Jenkins Stabilization & Performance Enhancements'], description: 'Enter the Epic Link' )
     string( name: 'Description', defaultValue: '',                                         description: 'Enter the Story description' )
   }
 
   environment {
-    // The JIRA Plugin uses the "site" configured under Manage Jenkins → Configure System → JIRA Sites.
-    // Suppose you named it "MYJIRA".
-    JIRA_SITE = 'MYJIRA'
-
-    // (Optional) If you still need these elsewhere:
     JIRA_BASE_URL = 'https://abhishekalimchandani1624.atlassian.net'
     JIRA_USER     = 'abhishekalimchandani1624@gmail.com'
-    // If you want the raw token in env.JIRA_TOKEN too:
+    // Secret text credential containing your API token
     JIRA_TOKEN    = credentials('jira-api-token-id')
   }
 
@@ -80,25 +75,44 @@ pipeline {
     stage('Create Jira Story') {
       steps {
         script {
-          // Using the Jenkins JIRA Plugin step jiraNewIssue:
-          def newKey = jiraNewIssue(
-            site: env.JIRA_SITE, 
-            issue: [
-              projectKey : params.PROJECT,
-              type       : params['Issue Type'],
-              summary    : params.Summary,
-              description: params.Description,
-              assignee   : params.Assignee,
-              reporter   : params.Reporter,
-              customfields: [
-                [ id: 'customfield_10008', value: params['Epic Link'] ]
-              ]
+          // 1) Build the JSON payload as a Groovy map
+          def payload = [
+            fields: [
+              project          : [ key: params.PROJECT ],
+              issuetype        : [ name: params['Issue Type'] ],
+              summary          : params.Summary,
+              description      : params.Description,
+              assignee         : [ name: params.Assignee ],
+              reporter         : [ name: params.Reporter ],
+              customfield_10008: params['Epic Link']
             ]
-          )
+          ]
 
-          // Confirmation output
-          echo "✅ Created JIRA Story ${newKey}"
-          echo "🔗 https://abhishekalimchandani1624.atlassian.net/browse/${newKey}"
+          // 2) Serialize to JSON text
+          def jsonBody = groovy.json.JsonOutput.toJson(payload)
+
+          // 3) Write it to a temporary file in the workspace
+          writeFile file: 'jira_payload.json', text: jsonBody
+
+          // 4) Call JIRA via curl (shell step)
+          //    -s: silent, -u: basic auth, -H: header, -d: @file
+          def response = sh(
+            script: """
+              curl -s -X POST \\
+                -H "Content-Type: application/json" \\
+                -u "${env.JIRA_USER}:${env.JIRA_TOKEN}" \\
+                -d @jira_payload.json \\
+                "${env.JIRA_BASE_URL}/rest/api/2/issue"
+            """,
+            returnStdout: true
+          ).trim()
+
+          // 5) Parse the JSON response with JsonSlurper
+          def json = new groovy.json.JsonSlurper().parseText(response)
+
+          // 6) Output the new issue key and URL
+          echo "✅ Created JIRA Story ${json.key}"
+          echo "🔗 ${json.self}"
         }
       }
     }
