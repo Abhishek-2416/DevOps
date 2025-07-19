@@ -18,8 +18,6 @@ pipeline {
         JIRA_USER = "abhishekalimchandani1624@gmail.com"
     }
 
-
-
     stages{
         stage('Create Jira Story'){
             steps{
