@@ -23,8 +23,8 @@ def createJiraStory(String baseUrl,
         connection.setRequestProperty('Content-Type', 'application/json')
 
         // //Build and set Basic Auth header
-        // def creds = "${username}:${apiToken}".bytes.encodeBase64().toString()
-        // connection.setRequestProperty('Authorization', "Basic ${creds}")
+        def creds = "${username}:${apiToken}".bytes.encodeBase64().toString()
+        connection.setRequestProperty('Authorization', "Basic ${creds}")
 
         def fields = [
             project: [key: projectKey],

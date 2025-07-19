@@ -1,5 +1,6 @@
 pipeline {
     agent any
+    
 
     parameters {
         choice(name: 'PROJECT',choices: ['System Team - Platform Engineering (STPE)'], description: "Please enter the Project name")
@@ -14,6 +15,8 @@ pipeline {
 
     enviornment{
         JIRA_BASE_URL = 'https://abhishekalimchandani1624.atlassian.net'
+        JIRA_USER = "abhishekalimchandani1624@gmail.com"
+        JIRA_TOKEN = "ATATT3xFfGF0d9NMW5qDmiGFjKWg9VTEEG4nfjICwwm7SvvbDUYxhkzYY-XZ0OUcr-kBGuww0x5djbeKzOu3Fkvg_aqWBf7nfI8E1steXBkk_tLr018gatYC-fBPXcUHTLQ72YOtIsyy4d7-EpupSB1jssMi2yMc_Jkl4J03Qh0VhP45NeTRD9E=44C2A34D"
     }
 
     stages{
@@ -21,7 +24,21 @@ pipeline {
             steps{
                 script {
                     def jira = load "${env.WORKSPACE}/jiraUtil.groovy"
-                    jira.createJiraStory(params.PROJECT,params.):
+                    
+                    def story = jira.createJiraStory(
+                        env.JIRA_BASE_URL,
+                        env.JIRA_USER,
+                        env.JIRA_TOKEN,
+                        params.PROJECT,
+                        params['Issue Type'],
+                        params.Summary,
+                        params.Assignee,
+                        params.Reporter,
+                        params['Epic Link'],
+                        params.Description
+                    )
+
+                    echo "✅ Created JIRA Story ${story.key}"
                 }
             }
         }
