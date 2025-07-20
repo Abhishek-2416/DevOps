@@ -1,14 +1,19 @@
-@Library('jiraLib') _
+@Library('jiraLib') _  // This must match the library name in Global Pipeline Libraries
 
 pipeline {
     agent any
 
     stages {
-        stage('Jira Ticket Creation') {
+        stage('Create JIRA Ticket') {
             steps {
                 script {
-                    // Call the function from your shared library
-                    createJiraTicket()
+                    // Call your shared library method
+                    def ticket = jiraUtil.createTicket(
+                        summary: 'Test ticket from Jenkins',
+                        description: 'This is a test ticket created via shared lib',
+                        projectKey: 'DEMO'
+                    )
+                    echo "Created JIRA ticket: ${ticket}"
                 }
             }
         }
