@@ -1,12 +1,10 @@
-@Library('your-shared-library') _  // if using a Shared Library
-
 pipeline {
     agent any
 
     parameters {
         string(name: 'Summary', defaultValue: 'Example Summary', description: 'JIRA Ticket Summary')
         text(name: 'Description', defaultValue: 'This is the body of the ticket.', description: 'JIRA Ticket Description')
-        string(name: 'PROJECT', defaultValue: 'STPE', description: 'JIRA Project Key')
+        string(name: 'PROJECT', defaultValue: 'TEST', description: 'JIRA Project Key')
         string(name: 'Issue_Type', defaultValue: 'Task', description: 'JIRA Issue Type (e.g., Task, Bug, Story)')
         string(name: 'Assignee', defaultValue: '<accountId>', description: 'Assignee accountId')
         string(name: 'Reporter', defaultValue: '<accountId>', description: 'Reporter accountId')
