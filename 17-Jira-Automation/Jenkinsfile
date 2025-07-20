@@ -3,30 +3,14 @@
 pipeline {
     agent any
 
-    parameters {
-        string(name: 'Summary', defaultValue: 'Example Summary', description: 'JIRA Ticket Summary')
-        text(name: 'Description', defaultValue: 'This is the body of the ticket.', description: 'JIRA Ticket Description')
-        string(name: 'PROJECT', defaultValue: 'TEST', description: 'JIRA Project Key')
-        string(name: 'Issue_Type', defaultValue: 'Task', description: 'JIRA Issue Type (e.g., Task, Bug, Story)')
-        string(name: 'Assignee', defaultValue: '<accountId>', description: 'Assignee accountId')
-        string(name: 'Reporter', defaultValue: '<accountId>', description: 'Reporter accountId')
-    }
-
     stages {
-        stage('Create Jira Ticket') {
+        stage('Jira Ticket Creation') {
             steps {
                 script {
-                    createJiraTicket(
-                        params.Summary,
-                        params.Description,
-                        params.PROJECT,
-                        params.Issue_Type,
-                        params.Assignee,
-                        params.Reporter
-                    )
+                    // Call the function from your shared library
+                    createJiraTicket()
                 }
             }
         }
     }
 }
-
