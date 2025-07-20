@@ -1,3 +1,5 @@
+@Library('devops-jira-lib') _
+
 pipeline {
     agent any
 
