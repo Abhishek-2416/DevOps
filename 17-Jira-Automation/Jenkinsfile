@@ -14,7 +14,7 @@ pipeline {
         stage('Create Jira Ticket') {
             steps {
                 script {
-                    jiraUtils.createJiraTicket(
+                    createJiraTicket(
                         params.Summary,
                         params.Description,
                         params.PROJECT,
