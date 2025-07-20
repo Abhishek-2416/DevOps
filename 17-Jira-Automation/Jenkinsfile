@@ -1,60 +1,31 @@
-import groovy.json.JsonOutput
-import groovy.json.JsonSlurper
+@Library('your-shared-library') _  // if using a Shared Library
 
 pipeline {
-  agent any
+    agent any
 
-  parameters {
-    choice( name: 'PROJECT',     choices: ['System Team - Platform Engineering (STPE)'],     description: 'Select the Project (key in parentheses)' )
-    choice( name: 'Issue Type',  choices: ['Story'],                                      description: 'Enter the Issue Type' )
-    string( name: 'Summary',     defaultValue: '',                                         description: 'Story Summary' )
-    choice( name: 'Assignee',    choices: ['Abhishek Alimchandani','Vandana Banda'],       description: 'Select the Assignee' )
-    choice( name: 'Reporter',    choices: ['Tammy Reid'],                                  description: 'Select the Reporter' )
-    choice( name: 'Epic Link',   choices: ['Jenkins Stabilization & Performance Enhancements'], description: 'Enter the Epic Link Key' )
-    string( name: 'Description', defaultValue: '',                                         description: 'Enter the Story Description' )
-  }
-
-  environment {
-    JIRA_SITE = 'MYJIRA'  // must match the “Name” in Manage Jenkins → Configure System → JIRA Sites
-  }
-
-  stages {
-    stage('Create and Assign Jira Story') {
-      steps {
-        script {
-          // 2) Build the JIRA fields map
-          def fieldsMap = [
-            project          : [ key: projKey ],
-            issuetype        : [ name: params['Issue Type'] ],
-            summary          : params.Summary,
-            description      : params.Description,
-            reporter         : params.Reporter,
-            assignee         : params.Assignee,
-            customfield_10008: params['Epic Link']
-          ]
-
-          // 3) Wrap it in the 'issue' envelope
-          def issuePayload = [ fields: fieldsMap ]
-
-          // 4) Create the JIRA story
-          def issueKey = jiraNewIssue(
-            site : env.JIRA_SITE,
-            issue: issuePayload
-          )
-          echo "✅ Created JIRA Story ${issueKey}"
-
-          // 5) Assign it explicitly (just to be sure)
-          jiraAssignIssue(
-            site    : env.JIRA_SITE,
-            issueKey: issueKey,
-            assignee: params.Assignee
-          )
-          echo "👤 Assigned to ${params.Assignee}"
-
-          // 6) Print the browse URL
-          echo "🔗 https://abhishekalimchandani1624.atlassian.net/browse/${issueKey}"
-        }
-      }
+    parameters {
+        string(name: 'Summary', defaultValue: 'Example Summary', description: 'JIRA Ticket Summary')
+        text(name: 'Description', defaultValue: 'This is the body of the ticket.', description: 'JIRA Ticket Description')
+        string(name: 'PROJECT', defaultValue: 'STPE', description: 'JIRA Project Key')
+        string(name: 'Issue_Type', defaultValue: 'Task', description: 'JIRA Issue Type (e.g., Task, Bug, Story)')
+        string(name: 'Assignee', defaultValue: '<accountId>', description: 'Assignee accountId')
+        string(name: 'Reporter', defaultValue: '<accountId>', description: 'Reporter accountId')
     }
-  }
+
+    stages {
+        stage('Create Jira Ticket') {
+            steps {
+                script {
+                    jiraUtils.createJiraTicket(
+                        params.Summary,
+                        params.Description,
+                        params.PROJECT,
+                        params.Issue_Type,
+                        params.Assignee,
+                        params.Reporter
+                    )
+                }
+            }
+        }
+    }
 }

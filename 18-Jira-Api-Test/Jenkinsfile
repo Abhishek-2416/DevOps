@@ -1,0 +1,13 @@
+pipeline {
+    agent any
+    stages {
+        stage('Create Jira') {
+            steps {
+                script {
+                    def response = httpRequestJson('POST', url, credentialsId, requestBody)
+                    echo "Response: ${response}"
+                }
+            }
+        }
+    }
+}
