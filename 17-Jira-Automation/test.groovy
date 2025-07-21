@@ -1,73 +1,59 @@
-// jiraUtil.groovy
-// Utility methods for JIRA operations. Load in Jenkins with `def jira = load 'jiraUtil.groovy'`.
-
+@Grab(group='org.codehaus.groovy.modules.http-builder', module='http-builder', version='0.7.1')
 import groovy.json.JsonBuilder
 import groovy.json.JsonSlurper
+import java.net.HttpURLConnection
+import java.net.URL
+import java.util.Base64
 
-/**
- * Creates a JIRA issue (e.g. Story) with the given fields.
- *
- * @param baseUrl     JIRA base URL (e.g. https://your-domain.atlassian.net)
- * @param username    Atlassian account email
- * @param apiToken    API token for authentication
- * @param projectKey  JIRA project key (e.g. "STPE")
- * @param issueType   Issue type name (e.g. "Story")
- * @param summary     Issue summary/title
- * @param description Issue description (multi-line OK)
- * @param assignee    (optional) user to assign
- * @param reporter    (optional) user reporting
- * @param epicLink    (optional) Epic Link value (customfield ID must match)
- * @param components  (optional) List of component names
- * @return            Map parsed from JIRA response (contains .key, .self)
- */
-def createStory(
-    String baseUrl,
-    String username,
-    String apiToken,
-    String projectKey,
-    String issueType,
-    String summary,
-    String description,
-    String assignee = null,
-    String reporter = null,
-    String epicLink = null,
-    List<String> components = []
-) {
-    // prepare Basic Auth header
-    def authHeader = "Basic " + "${username}:${apiToken}".bytes.encodeBase64().toString()
-
-    // build fields
-    def fields = [
-        project    : [ key: projectKey ],
-        issuetype  : [ name: issueType ],
-        summary    : summary,
-        description: description
+def createJiraPayload(String summary, String description, String projectKey, String issueType, String assignee, String reporter) {
+    def payload = [
+        fields: [
+            project     : [ key: projectKey ],
+            summary     : summary,
+            description : description,
+            issuetype   : [ name: issueType ],
+            assignee    : [ name: assignee ],
+            reporter    : [ name: reporter ]
+        ]
     ]
-    if (assignee)   fields.assignee   = [ name: assignee ]
-    if (reporter)   fields.reporter   = [ name: reporter ]
-    if (epicLink)   fields['customfield_10008'] = epicLink  // adjust ID if needed
-    if (components) fields.components = components.collect { [ name: it ] }
+    return new JsonBuilder(payload).toPrettyString()
+}
 
-    // wrap payload
-    def payload = [ fields: fields ]
-    def body    = new JsonBuilder(payload).toString()
+def createJiraTicket() {
+    def summary = "Test Story Summary"
+    def description = "This is a test story description"
+    def projectKey = "TEST"
+    def issueType = "Story"
+    def assignee = "abhishekalimchandani1624"
+    def reporter = "tammyreid"
 
-    // make HTTP call
-    def conn = new URL("${baseUrl}/rest/api/2/issue").openConnection()
-    conn.requestMethod          = 'POST'
-    conn.doOutput               = true
-    conn.setRequestProperty('Content-Type',  'application/json')
-    conn.setRequestProperty('Authorization', authHeader)
-    conn.outputStream.withWriter('UTF-8') { it << body }
+    def payload = createJiraPayload(summary, description, projectKey, issueType, assignee, reporter)
 
-    // handle response
-    if (conn.responseCode == 201) {
-        return new JsonSlurper().parseText(conn.inputStream.text) as Map
+    def jiraUrl = "https://abhishekalimchandani1624.atlassian.net/rest/api/2/issue"
+
+    def email = "abhishekalimchandani1624@gmail.com"
+    def apiToken = "ATATT3xFfGF0wzqLL3ZyzOeaHEZEsKFQ2FP9vLG7HOojIKNwanY9p9Jdhi2KFlJJQSX0O_FPjYuV61cmLOCwWPQyNhBPNRj5eUJpfolUWJGKWHls6dGjq8pFkzmxGfzDjBL9tne2NPIAlvRHOe3i6cbWoaXlA41iO9ce9klC95eyRoRwgUorxj8=CA21824C"
+    def authString = "${email}:${apiToken}".bytes.encodeBase64().toString()
+
+    def connection = new URL(jiraUrl).openConnection() as HttpURLConnection
+    connection.setRequestMethod("POST")
+    connection.setRequestProperty("Authorization", "Basic ${authString}")
+    connection.setRequestProperty("Content-Type", "application/json")
+    connection.setDoOutput(true)
+
+    connection.outputStream.withWriter("UTF-8") { it.write(payload) }
+
+    def responseCode = connection.responseCode
+    println "Response Code: $responseCode"
+
+    if (responseCode == 201) {
+        def response = connection.inputStream.text
+        println "Ticket created: $response"
     } else {
-        def err = conn.errorStream?.text ?: 'No error details'
-        throw new RuntimeException("JIRA createStory failed (${conn.responseCode}): ${err}")
+        def errorResponse = connection.errorStream?.text
+        println "Failed to create ticket. Response Code: $responseCode"
+        println "Error: $errorResponse"
     }
 }
 
-// Return script binding so pipeline can call createStory()
-return this
+createJiraTicket()
